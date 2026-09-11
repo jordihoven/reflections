@@ -3,7 +3,7 @@
 import { useRef, useState, useSyncExternalStore } from "react";
 import { Composer } from "./components/composer";
 import { ReflectionItem } from "./components/reflection-item";
-import type { Reflection } from "./components/types";
+import type { Attachment, Reflection } from "./components/types";
 
 const STORAGE_KEY = "reflections";
 
@@ -35,16 +35,21 @@ export default function Home() {
 
   const save = (next: Reflection[]) => {
     cache.current = next;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    } catch {
+      window.alert("Storage is full. Can't save any more reflections...");
+    }
     listeners.forEach((cb) => cb());
   };
 
-  const add = (value: string) => {
+  const add = (value: string, attachments: Attachment[] = []) => {
     save([
       {
         id: crypto.randomUUID(),
         text: value,
         createdAt: new Date().toISOString(),
+        attachments,
       },
       ...reflections,
     ]);

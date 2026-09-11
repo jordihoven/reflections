@@ -1,6 +1,6 @@
 "use client";
 
-import { Trash2 } from "lucide-react";
+import { FileText, Trash2 } from "lucide-react";
 import type { Reflection } from "./types";
 
 export function ReflectionItem({
@@ -31,13 +31,37 @@ export function ReflectionItem({
           : "border-transparent blur-[2px] opacity-50"
       }`}
     >
-      <p
-        className={`w-full overflow-wrap-break-word whitespace-pre-wrap text-base leading-[1.7] transition-colors duration-400 ${
-          revealed ? "text-foreground" : "text-muted"
-        }`}
-      >
-        {reflection.text}
-      </p>
+      {reflection.text && (
+        <p
+          className={`w-full overflow-wrap-break-word whitespace-pre-wrap text-base leading-[1.7] transition-colors duration-400 ${
+            revealed ? "text-foreground" : "text-muted"
+          }`}
+        >
+          {reflection.text}
+        </p>
+      )}
+      {reflection.attachments && reflection.attachments.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {reflection.attachments.map((a) =>
+            a.type.startsWith("image/") ? (
+              <img
+                key={a.id}
+                src={a.dataUrl}
+                alt={a.name}
+                className="max-h-48 w-full rounded-lg object-cover"
+              />
+            ) : (
+              <span
+                key={a.id}
+                className="flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-zinc-50 px-2.5 py-1 text-[13px] text-muted"
+              >
+                <FileText size={14} className="shrink-0" />
+                <span className="max-w-48 truncate">{a.name}</span>
+              </span>
+            ),
+          )}
+        </div>
+      )}
       <div className="flex w-full items-center justify-between">
         <time className="flex items-center whitespace-nowrap text-[14px] text-muted">
           {new Date(reflection.createdAt).toLocaleTimeString([], {
