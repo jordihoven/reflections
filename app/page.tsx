@@ -1,7 +1,77 @@
+"use client";
+
+import { useRef, useState, useSyncExternalStore } from "react";
+import { Composer } from "./components/composer";
+import { ReflectionItem } from "./components/reflection-item";
+import type { Reflection } from "./components/types";
+
+const STORAGE_KEY = "reflections";
+
+function load(): Reflection[] {
+  if (typeof window === "undefined") return [];
+  try {
+    // v0.1 localhost, will move to atproto...
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]");
+  } catch {
+    return [];
+  }
+}
+
+const listeners = new Set<() => void>();
+const empty: Reflection[] = []; // hold reflections...
+
 export default function Home() {
+  const cache = useRef<Reflection[]>(load());
+  const [revealedId, setRevealedId] = useState<string | null>(null);
+
+  const reflections = useSyncExternalStore(
+    (cb) => {
+      listeners.add(cb);
+      return () => listeners.delete(cb);
+    },
+    () => cache.current,
+    () => empty,
+  );
+
+  const save = (next: Reflection[]) => {
+    cache.current = next;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    listeners.forEach((cb) => cb());
+  };
+
+  const add = (value: string) => {
+    save([
+      {
+        id: crypto.randomUUID(),
+        text: value,
+        createdAt: new Date().toISOString(),
+      },
+      ...reflections,
+    ]);
+  };
+
+  const remove = (id: string) => {
+    save(reflections.filter((x) => x.id !== id));
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      Bla
-    </div>
+    <main className="mx-auto w-full max-w-xl flex flex-1 flex-col gap-6 px-4 py-8">
+      <Composer onPost={add} />
+      <ul className="flex flex-col gap-3">
+        {reflections.map((r) => (
+          <ReflectionItem
+            key={r.id}
+            reflection={r}
+            revealed={r.id === revealedId}
+            onReveal={() => setRevealedId(r.id)}
+            onHide={() => setRevealedId(null)}
+            onDelete={remove}
+          />
+        ))}
+        {reflections.length === 0 && (
+          <p className="text-muted text-center">No reflections to show...</p>
+        )}
+      </ul>
+    </main>
   );
 }

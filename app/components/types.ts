@@ -1,0 +1,1 @@
+export type Reflection = { id: string; text: string; createdAt: string };
