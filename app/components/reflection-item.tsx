@@ -78,9 +78,7 @@ export function ReflectionItem({
           <button
             type="button"
             onClick={() => {
-              if (
-                window.confirm("Delete this reflection? This cannot be undone.")
-              )
+              if (window.confirm("Delete this reflection?"))
                 onDelete(reflection.id);
             }}
             aria-label="Delete reflection"
