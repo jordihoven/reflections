@@ -72,10 +72,10 @@ export function Composer({
         setDragActive(false);
         acceptFiles(Array.from(e.dataTransfer.files));
       }}
-      className={`group flex flex-col gap-3 rounded-xl border bg-white p-2 px-3 shadow-[0px_1px_8px_rgba(0,0,0,0.06)] transition-all duration-200 ${
+      className={`group flex flex-col gap-3 rounded-xl border bg-card p-2 px-3 shadow-[0px_1px_8px_rgba(0,0,0,0.06)] transition-all duration-200 ${
         dragActive
           ? "border-primary ring-2 ring-primary/50"
-          : "border-zinc-200 hover:border-primary hover:ring-2 hover:ring-primary/50 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/50"
+          : "border-border hover:border-primary hover:ring-2 hover:ring-primary/50 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/50"
       }`}
     >
       <textarea
@@ -111,7 +111,7 @@ export function Composer({
                   type="button"
                   onClick={() => removeAttachment(a.id)}
                   aria-label={`Remove ${a.name}`}
-                  className="absolute -top-1.5 -right-1.5 flex cursor-pointer items-center justify-center rounded-full bg-zinc-800 p-0.5 text-white opacity-80 transition-opacity hover:opacity-100"
+                  className="absolute -top-1.5 -right-1.5 flex cursor-pointer items-center justify-center rounded-full bg-inverse p-0.5 text-white opacity-80 transition-opacity hover:opacity-100"
                 >
                   <X size={12} />
                 </button>
@@ -119,7 +119,7 @@ export function Composer({
             ) : (
               <span
                 key={a.id}
-                className="flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-zinc-50 py-1 pr-1 pl-2.5 text-[13px] text-foreground"
+                className="flex items-center gap-1.5 rounded-lg border border-border bg-subtle py-1 pr-1 pl-2.5 text-[13px] text-foreground"
               >
                 <FileText size={14} className="shrink-0 text-muted" />
                 <span className="max-w-40 truncate">{a.name}</span>
@@ -127,7 +127,7 @@ export function Composer({
                   type="button"
                   onClick={() => removeAttachment(a.id)}
                   aria-label={`Remove ${a.name}`}
-                  className="flex cursor-pointer items-center justify-center rounded-md p-0.5 text-muted transition-colors hover:bg-zinc-200 hover:text-foreground"
+                  className="flex cursor-pointer items-center justify-center rounded-md p-0.5 text-muted transition-colors hover:bg-hover hover:text-foreground"
                 >
                   <X size={14} />
                 </button>

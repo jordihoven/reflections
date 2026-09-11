@@ -27,7 +27,7 @@ export function ReflectionItem({
       }}
       className={`flex flex-col gap-2 rounded-xl border p-3 transition-all duration-400 ${
         revealed
-          ? "border-zinc-200 bg-white blur-none opacity-100 shadow-[0px_2px_12px_rgba(0,0,0,0.08)]"
+          ? "border-border bg-card blur-none opacity-100 shadow-[0px_2px_12px_rgba(0,0,0,0.08)]"
           : "border-transparent blur-[2px] opacity-50"
       }`}
     >
@@ -44,6 +44,7 @@ export function ReflectionItem({
         <div className="flex flex-wrap gap-2">
           {reflection.attachments.map((a) =>
             a.type.startsWith("image/") ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 key={a.id}
                 src={a.dataUrl}
@@ -53,7 +54,7 @@ export function ReflectionItem({
             ) : (
               <span
                 key={a.id}
-                className="flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-zinc-50 px-2.5 py-1 text-[13px] text-muted"
+                className="flex items-center gap-1.5 rounded-lg border border-border bg-subtle px-2.5 py-1 text-[13px] text-muted"
               >
                 <FileText size={14} className="shrink-0" />
                 <span className="max-w-48 truncate">{a.name}</span>
@@ -83,7 +84,7 @@ export function ReflectionItem({
                 onDelete(reflection.id);
             }}
             aria-label="Delete reflection"
-            className="flex cursor-pointer items-center gap-1 rounded-xl px-3 py-2 text-[14px] text-muted transition-all duration-200 hover:bg-[#F6F6F6] hover:text-foreground"
+            className="flex cursor-pointer items-center gap-1 rounded-xl px-3 py-2 text-[14px] text-muted transition-all duration-200 hover:bg-hover hover:text-foreground"
           >
             <Trash2 size={16} />
           </button>

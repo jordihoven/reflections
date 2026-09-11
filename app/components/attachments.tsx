@@ -48,7 +48,7 @@ export function AddFilesButton({ onSelect }: { onSelect: (files: File[]) => void
         onClick={() => inputRef.current?.click()}
         aria-label="Add files"
         title="Add files"
-        className="flex cursor-pointer items-center gap-1 rounded-xl px-3 py-2 text-[14px] text-muted transition-all duration-200 hover:bg-[#F6F6F6] hover:text-foreground"
+        className="flex cursor-pointer items-center gap-1 rounded-xl px-3 py-2 text-[14px] text-muted transition-all duration-200 hover:bg-hover hover:text-foreground"
       >
         <ImagePlus size={16} />
       </button>

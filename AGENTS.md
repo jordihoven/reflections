@@ -12,3 +12,9 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 - never commit. i commit, you may let me know you think we're ready to commit, but you NEVER commit.
 - do not assume. i am the assumer. ask me to make assumptions.
+
+# theming
+
+- dark mode follows `prefers-color-scheme` only. no toggle, no JS, no `dark:` utility classes.
+- colors are Tailwind v4 semantic tokens (card, border, hover, subtle, inverse, background, foreground, muted) defined in `app/globals.css` under `@theme` (NOT `@theme inline` — inline bakes literal values into utilities and breaks the dark override); dark values override the same `--color-*` vars in an `@media (prefers-color-scheme: dark)` block on `:root`.
+- new colors: add a token to `@theme` + dark override. never hardcode hex or zinc/white utilities.
