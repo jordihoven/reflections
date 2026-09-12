@@ -36,6 +36,7 @@ Status: image + audio + text support done (localStorage phase)
 
 ## Later (check before building — product owner)
 
+- Login onboarding: explain what atproto is + link to create an account (e.g. Bluesky register). Non-technical users type email, see nothing, and bounce.
 - Clipboard paste (cmd+v image into composer)
 - Video support (skipped: too big for localStorage)
 - Captions / alt-text per attachment (already deferred in `reflections.md`)

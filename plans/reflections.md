@@ -147,7 +147,7 @@ Social features may come later. Do not build social mechanics just because ATPro
 - **Next.js** — app
 - **TypeScript** — everything
 - **Tailwind CSS** — styling
-- **@atproto/oauth-client-node** — login/session
+- **@atproto/oauth-client-browser** — login/session
 - **@atproto/api** — ATProto API calls
 - **Custom Lexicon** — Reflection records
 

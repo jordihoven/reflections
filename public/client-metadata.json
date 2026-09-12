@@ -1,0 +1,12 @@
+{
+  "client_id": "https://reflections-gules.vercel.app/client-metadata.json",
+  "client_name": "Reflections",
+  "client_uri": "https://reflections-gules.vercel.app",
+  "redirect_uris": ["https://reflections-gules.vercel.app/"],
+  "grant_types": ["authorization_code", "refresh_token"],
+  "response_types": ["code"],
+  "scope": "atproto repo:app.reflections.reflection",
+  "token_endpoint_auth_method": "none",
+  "application_type": "web",
+  "dpop_bound_access_tokens": true
+}

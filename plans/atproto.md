@@ -122,4 +122,5 @@ Simple component: handle text input + "Sign in" button. Shown when no active ses
 ## Open questions (need your input)
 
 - [x] **Domain:** `reflections-gules.vercel.app` (Vercel). Update client metadata when custom domain lands.
-- [ ] **Lexicon NSID:** Needs a domain you own. Buy a domain first, then we set the NSID. Can stub with a placeholder and swap later — the NSID just needs to be final before real users write records.
+- [x] **Lexicon NSID:** `app.reflections.reflection` (resolved in reflections.md). Still swap before real users write records — NSID needs a domain you own.
+- [ ] **Scope granularity:** `atproto repo:app.reflections.reflection` for v1 (per docs, repo collections are Lexicon scopes). Add `blob:*/*` when attachments (step 8) land.
