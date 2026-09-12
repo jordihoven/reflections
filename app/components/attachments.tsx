@@ -7,6 +7,12 @@ import type { Attachment } from "./types";
 // ~1MB/file so 4 files stay under the ~5MB localStorage quota. atproto blobs replace this cap.
 export const MAX_FILE_SIZE = 1_000_000;
 
+const ALLOWED_TYPES = ["image/", "audio/", "text/plain", "text/markdown"];
+
+function isAllowedType(type: string) {
+  return ALLOWED_TYPES.some((t) => (t.endsWith("/") ? type.startsWith(t) : type === t));
+}
+
 function readAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -20,11 +26,12 @@ export async function filesToAttachments(
   files: File[],
   remaining: number,
 ): Promise<{ attachments: Attachment[]; skipped: string[] }> {
-  const skipped = files
+  const allowed = files.filter((f) => isAllowedType(f.type));
+  const skipped = allowed
     .filter((f) => f.size > MAX_FILE_SIZE)
     .map((f) => f.name);
   const attachments = await Promise.all(
-    files
+    allowed
       .filter((f) => f.size <= MAX_FILE_SIZE)
       .slice(0, remaining)
       .map(async (f) => ({
