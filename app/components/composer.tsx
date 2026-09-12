@@ -18,13 +18,7 @@ export function Composer({
   const [notice, setNotice] = useState("");
   const [dragActive, setDragActive] = useState(false);
   const dragDepth = useRef(0);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // smart textarea, knows when to grow and shrink based on content...
-  const grow = (el: HTMLTextAreaElement) => {
-    el.style.height = "0px";
-    el.style.height = el.scrollHeight + "px";
-  };
 
   const acceptFiles = async (files: File[]) => {
     const remaining = MAX_FILES - attachments.length;
@@ -52,7 +46,6 @@ export function Composer({
     setAttachments([]);
     setNotice("");
     setDragActive(false);
-    if (textareaRef.current) textareaRef.current.style.height = ""; // reset composer to initial height...
   };
 
   return (
@@ -79,11 +72,9 @@ export function Composer({
       }`}
     >
       <textarea
-        ref={textareaRef}
         value={text}
         onChange={(e) => {
           setText(e.target.value);
-          grow(e.target);
         }}
         onKeyDown={(e) => {
           if (e.key === "Enter" && !e.shiftKey && !("ontouchstart" in window)) {
@@ -95,7 +86,7 @@ export function Composer({
         placeholder="What's on your mind?"
         maxLength={MAX_LENGTH}
         rows={1}
-        className="w-full resize-none overflow-auto bg-transparent text-base leading-loose font-medium text-foreground placeholder:text-muted focus:outline-none"
+        className="w-full resize-none overflow-auto bg-transparent text-base leading-loose font-medium text-foreground placeholder:text-muted focus:outline-none [field-sizing:content]"
       />
 
       {attachments.length > 0 && (

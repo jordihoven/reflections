@@ -29,6 +29,11 @@ Status: image + audio + text support done (localStorage phase)
 - **1MB cap, 4 file cap, MAX_LENGTH=1000** are constants in `composer.tsx` / `attachments.tsx`
 - No test for the file-processing paths (`filesToAttachments`, quota guard)
 
+## Toast notifications
+
+- Currently only one toast scenario (skipped files). Not worth a dependency yet.
+- When atproto lands (auth errors, upload failures, sync status), add [sonner](https://sonner.emilkowal.ski/) — tiny, no provider wrapper needed.
+
 ## Later (check before building — product owner)
 
 - Clipboard paste (cmd+v image into composer)

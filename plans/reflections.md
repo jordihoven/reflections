@@ -1,5 +1,15 @@
 # Reflections
 
+# pivot!
+
+atproto is public by default, reflections would be private writing. those contradict. instead, pivot towards a digital garden. public thinking, tending your thoughts. even discussing ideas with others.
+
+- seeds -> new thoughts
+- trees -> mature ideas
+- tending -> review session to tend to seeds, weed or grow them
+
+you might use it to discuss philosophy, or your favorite javascript framework.
+
 ## Decision rule
 
 Product owner must be consulted before meaningful design decisions.
@@ -197,7 +207,7 @@ Core loop must work end-to-end before building full UI:
 4. Create Reflection record referencing blob
 5. Read Reflection back and render it
 6. Delete Reflection
-8. Confirm with different ATProto account/PDS if practical
+7. Confirm with different ATProto account/PDS if practical
 
 If this works, fundamental architecture is proven.
 
