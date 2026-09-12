@@ -1,6 +1,15 @@
-# Todo — Dropzone / Attachments
+# Todos
 
-## Status: image + audio + text support done (localStorage phase)
+# Bugs 🐛
+
+- on mobile, the composer posts on enter. enter on mobile should be newline, only the button should post.
+- ...
+
+# Features 🚀
+
+## Dropzone when atproto lands
+
+Status: image + audio + text support done (localStorage phase)
 
 ## What works
 
@@ -14,7 +23,7 @@
 - Post enabled with text OR files (attachments-only reflections allowed)
 - Quota overflow during save → alert (cache stays in memory; lost on reload)
 
-## Gaps / notes
+## Gaps
 
 - **No MIME validation on drop** — the `accept` filter only applies to the file picker; a dragged `.exe` is stored as a chip. Decide whether to hard-reject non-allowed types.
 - **1MB cap, 4 file cap, MAX_LENGTH=1000** are constants in `composer.tsx` / `attachments.tsx`

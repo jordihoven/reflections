@@ -86,7 +86,8 @@ export function Composer({
           grow(e.target);
         }}
         onKeyDown={(e) => {
-          if (e.key === "Enter" && !e.shiftKey) {
+          if (e.key === "Enter" && !e.shiftKey && !("ontouchstart" in window)) {
+            // desktop enter = post, mobile enter = newline...
             e.preventDefault();
             post();
           }
