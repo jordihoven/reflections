@@ -4,10 +4,12 @@ import {
   BrowserOAuthClient,
   type OAuthSession,
 } from "@atproto/oauth-client-browser";
-import type { Reflection } from "../components/types";
+import type { Attachment, Reflection } from "../components/types";
 
 export const COLLECTION = "app.reflections.reflection";
-export const SCOPE = `atproto repo:${COLLECTION}`;
+// `atproto` = auth-only. `transition:generic` = write any record + upload blobs.
+// Universally supported across all PDSes (old app-password level).
+export const SCOPE = "atproto transition:generic";
 
 const CLIENT_ID = "https://reflections-gules.vercel.app/client-metadata.json";
 const REFLECTION_LIMIT = 100;
@@ -19,6 +21,7 @@ const handleResolver = new AtprotoDohHandleResolver({
 let client: BrowserOAuthClient | null = null;
 let agent: Agent | null = null;
 let session: OAuthSession | null = null;
+let pdsUrl: string | undefined;
 
 function isLoopback(host: string) {
   return host === "127.0.0.1" || host === "localhost" || host === "[::1]" || host === "::1";
@@ -78,6 +81,8 @@ async function doInit(): Promise<void> {
     if (result?.session) {
       session = result.session;
       agent = new Agent(result.session);
+      // token's `aud` is the resolved PDS base URL (correct even with entryways)
+      pdsUrl = (await result.session.getTokenInfo()).aud;
       setAuthState({ status: "signedIn" });
     } else {
       setAuthState({ status: "signedOut" });
@@ -120,12 +125,58 @@ export async function signOut() {
   }
   session = null;
   agent = null;
+  pdsUrl = undefined;
   setAuthState({ status: "signedOut" });
 }
 
 function requireAgent(): Agent {
   if (!agent) throw new Error("Not signed in");
   return agent;
+}
+
+function blobUrlFor(cid: string): string | undefined {
+  if (!pdsUrl) return undefined;
+  const url = new URL("/xrpc/com.atproto.sync.getBlob", pdsUrl);
+  url.searchParams.set("did", agent!.assertDid);
+  url.searchParams.set("cid", cid);
+  return url.toString();
+}
+
+// A blob ref read back from the repo comes in one of several shapes depending
+// on how the SDK decoded it: `{$link: string}`, a CID object (has toString),
+// or a BlobRef instance (extra `original`). Handle all of them.
+function blobCid(blob: unknown): string | undefined {
+  if (!blob || typeof blob !== "object") return undefined;
+  const b = blob as { ref?: unknown; original?: { ref?: unknown } };
+  const ref = b.original?.ref ?? b.ref;
+  if (!ref) return undefined;
+  if (typeof ref === "string") return ref;
+  const link = (ref as { $link?: unknown }).$link;
+  if (typeof link === "string") return link;
+  const toStr = (ref as { toString?: () => unknown }).toString;
+  if (typeof toStr === "function") {
+    const s = toStr.call(ref);
+    if (typeof s === "string" && s) return s;
+  }
+  return undefined;
+}
+
+type StoredAttachment = {
+  name?: string;
+  blob: unknown;
+};
+
+function storedToAttachment(s: StoredAttachment): Attachment | undefined {
+  const cid = blobCid(s.blob);
+  if (!cid) return undefined;
+  const blob = (s.blob ?? {}) as { mimeType?: string; size?: number };
+  return {
+    id: cid,
+    name: s.name ?? "file",
+    type: blob.mimeType ?? "application/octet-stream",
+    size: blob.size ?? 0,
+    url: blobUrlFor(cid),
+  };
 }
 
 export async function listReflections(): Promise<Reflection[]> {
@@ -138,22 +189,57 @@ export async function listReflections(): Promise<Reflection[]> {
   });
   return data.records
     .map(({ uri, value }) => {
-      const v = value as { text?: string; createdAt: string };
-      return { id: uri, text: v.text ?? "", createdAt: v.createdAt };
+      const v = value as {
+        text?: string;
+        createdAt: string;
+        attachments?: StoredAttachment[];
+      };
+      return {
+        id: uri,
+        text: v.text ?? "",
+        createdAt: v.createdAt,
+        attachments: v.attachments
+          ?.map(storedToAttachment)
+          .filter((a): a is Attachment => a !== undefined),
+      };
     })
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
-export async function createReflection(text: string): Promise<Reflection> {
+export async function createReflection(
+  text: string,
+  attachments: Attachment[],
+): Promise<Reflection> {
   const a = requireAgent();
-  const record = { text, createdAt: new Date().toISOString() };
-  // ponytail: attachments dropped until blob:*/* scope + blob upload land (step 8). Reintroduce with the rest of the blob work, not before.
+  const uploaded: StoredAttachment[] = [];
+  for (const att of attachments) {
+    if (!att.file) continue;
+    // sequential: no parallel burst while large blobs upload
+    const { data } = await a.com.atproto.repo.uploadBlob(att.file);
+    uploaded.push({
+      name: att.name,
+      blob: {
+        $type: "blob",
+        ref: { $link: data.blob.ref.toString() },
+        mimeType: data.blob.mimeType,
+        size: data.blob.size,
+      },
+    });
+  }
+  const record = {
+    text,
+    createdAt: new Date().toISOString(),
+    ...(uploaded.length > 0 ? { attachments: uploaded } : {}),
+  };
   const { data } = await a.com.atproto.repo.createRecord({
     repo: a.assertDid,
     collection: COLLECTION,
     record,
   });
-  return { id: data.uri, text, createdAt: record.createdAt };
+  const saved: Attachment[] = uploaded
+    .map(storedToAttachment)
+    .filter((a): a is Attachment => a !== undefined);
+  return { id: data.uri, text, createdAt: record.createdAt, attachments: saved.length ? saved : undefined };
 }
 
 export async function deleteReflection(uri: string) {

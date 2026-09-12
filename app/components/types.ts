@@ -3,7 +3,11 @@ export type Attachment = {
   name: string;
   type: string;
   size: number;
-  dataUrl: string;
+  // transient, composer side: used for preview + blob upload
+  dataUrl?: string;
+  file?: File;
+  // persisted side: URL to the uploaded blob on the user's PDS
+  url?: string;
 };
 
 export type Reflection = {

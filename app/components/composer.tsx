@@ -6,7 +6,6 @@ import { AddFilesButton, filesToAttachments } from "./attachments";
 import type { Attachment } from "./types";
 
 const MAX_LENGTH = 1000; // subject to change, but need some cap...
-const MAX_FILES = 4; // matches v1 decision, atproto PDS blob limit is the real constraint later
 
 export function Composer({
   onPost,
@@ -21,15 +20,9 @@ export function Composer({
 
 
   const acceptFiles = async (files: File[]) => {
-    const remaining = MAX_FILES - attachments.length;
-    const { attachments: next, skipped } = await filesToAttachments(
-      files,
-      remaining,
-    );
-    setAttachments((prev) => [...prev, ...next].slice(0, MAX_FILES));
-    if (skipped.length) setNotice(`Skipped (over 1MB): ${skipped.join(", ")}`);
-    else if (!next.length || files.length > remaining)
-      setNotice("Max 4 files per reflection.");
+    const { attachments: next, skipped } = await filesToAttachments(files);
+    setAttachments((prev) => [...prev, ...next]);
+    if (skipped.length) setNotice(`Skipped (unallowed type): ${skipped.join(", ")}`);
     else setNotice("");
   };
 

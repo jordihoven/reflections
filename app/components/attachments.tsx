@@ -4,9 +4,7 @@ import { useRef } from "react";
 import { ImagePlus } from "lucide-react";
 import type { Attachment } from "./types";
 
-// ~1MB/file so 4 files stay under the ~5MB localStorage quota. atproto blobs replace this cap.
-export const MAX_FILE_SIZE = 1_000_000;
-
+// PDS is the size/count authority — no client-side caps. Only type is filtered here.
 const ALLOWED_TYPES = ["image/", "audio/", "text/plain", "text/markdown"];
 
 function isAllowedType(type: string) {
@@ -24,23 +22,20 @@ function readAsDataUrl(file: File): Promise<string> {
 
 export async function filesToAttachments(
   files: File[],
-  remaining: number,
 ): Promise<{ attachments: Attachment[]; skipped: string[] }> {
   const allowed = files.filter((f) => isAllowedType(f.type));
-  const skipped = allowed
-    .filter((f) => f.size > MAX_FILE_SIZE)
+  const skipped = files
+    .filter((f) => !isAllowedType(f.type))
     .map((f) => f.name);
   const attachments = await Promise.all(
-    allowed
-      .filter((f) => f.size <= MAX_FILE_SIZE)
-      .slice(0, remaining)
-      .map(async (f) => ({
-        id: crypto.randomUUID(),
-        name: f.name,
-        type: f.type,
-        size: f.size,
-        dataUrl: await readAsDataUrl(f),
-      })),
+    allowed.map(async (f) => ({
+      id: crypto.randomUUID(),
+      name: f.name,
+      type: f.type,
+      size: f.size,
+      file: f,
+      dataUrl: await readAsDataUrl(f),
+    })),
   );
   return { attachments, skipped };
 }

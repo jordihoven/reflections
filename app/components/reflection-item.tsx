@@ -43,23 +43,25 @@ export function ReflectionItem({
       {reflection.attachments && reflection.attachments.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {reflection.attachments.map((a) =>
-            a.type.startsWith("image/") ? (
+            a.type.startsWith("image/") && (a.dataUrl ?? a.url) ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 key={a.id}
-                src={a.dataUrl}
+                src={a.dataUrl ?? a.url}
                 alt={a.name}
                 className="max-h-48 w-full rounded-lg object-cover"
               />
-            ) : (
-              <span
+            ) : a.url ? (
+              <a
                 key={a.id}
+                href={a.url}
+                download={a.name}
                 className="flex items-center gap-1.5 rounded-lg border border-border bg-subtle px-2.5 py-1 text-[13px] text-muted"
               >
                 <FileText size={14} className="shrink-0" />
                 <span className="max-w-48 truncate">{a.name}</span>
-              </span>
-            ),
+              </a>
+            ) : null,
           )}
         </div>
       )}

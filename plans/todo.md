@@ -7,27 +7,26 @@
 
 # Features 🚀
 
-## Dropzone when atproto lands
+## Attachments (atproto blobs)
 
-Status: image + audio + text support done (localStorage phase)
+Status: **done** (PDS-backed, no client caps) — see `atproto.md` step 8.
 
 ## What works
 
 - **Add files** via icon button (`AddFilesButton`, `app/components/attachments.tsx`) or **drag & drop anywhere on the composer** (whole composer is the drop target, shows highlight ring)
-- **Max 4 files per reflection**
-- **Accepted types:** `image/*` (incl. GIFs), `audio/*`, `text/plain`, `text/markdown`, `text/md`
-- **Per-file cap: ~1MB** — keeps 4 files under the ~5MB localStorage quota; oversized files are skipped with an inline notice
-- Files stored as **base64 data URLs** in localStorage alongside the reflection
-- Previews in composer: image thumbnails, non-images as name chips; each removable
-- Feed renders attachments (images max-h-48, non-images as chips)
+- **No client caps** — 4-file and 1MB limits removed; the PDS is the sole size/count authority, rejection surfaced as a friendly error
+- **Accepted types:** `image/*` (incl. GIFs), `audio/*`, `text/plain`, `text/markdown`, `text/md`; disallowed types dropped with an inline notice (drag + picker)
+- Files uploaded as **ATProto blobs** (`uploadBlob`); reflection record references them (`{ name?, blob: { $type: "blob", ref, mimeType, size } }`)
+- Composer previews from local data URLs; **optimistic post** renders text + image instantly, swaps to the persisted PDS-backed record when upload+write land
+- Feed renders images from PDS blob URLs, non-images as **download chips**
 - Post enabled with text OR files (attachments-only reflections allowed)
-- Quota overflow during save → alert (cache stays in memory; lost on reload)
+- Upload failure → alert with the PDS's error message (its limits are the only limits)
 
 ## Gaps
 
-- **No MIME validation on drop** — the `accept` filter only applies to the file picker; a dragged `.exe` is stored as a chip. Decide whether to hard-reject non-allowed types.
-- **1MB cap, 4 file cap, MAX_LENGTH=1000** are constants in `composer.tsx` / `attachments.tsx`
-- No test for the file-processing paths (`filesToAttachments`, quota guard)
+- **No test** for the file-processing paths (`filesToAttachments`, blob ref decode)
+- **Blob deletion is eventual, not instant** — `deleteRecord` drops the record; PDS GC sweeps orphaned blobs. No `deleteBlob` endpoint.
+- **Entryway PDSes untested** — blob base is derived from the token `aud` (should handle them), but only verified against a direct PDS
 
 ## Toast notifications
 
@@ -38,14 +37,8 @@ Status: image + audio + text support done (localStorage phase)
 
 - Login onboarding: explain what atproto is + link to create an account (e.g. Bluesky register). Non-technical users type email, see nothing, and bounce.
 - Clipboard paste (cmd+v image into composer)
-- Video support (skipped: too big for localStorage)
+- Video support (blobs allow it now; old "too big for localStorage" blocker is gone — just revisit)
 - Captions / alt-text per attachment (already deferred in `reflections.md`)
 - Reorder / drag attachments
 - Always-visible size/type error instead of inline notice
-- Failed-upload alerting (partially covered by quota alert)
-
-## When atproto lands
-
-- Data URL → blob ref uploaded to PDS
-- 1MB cap → PDS blob limits (surfaced on rejection)
-- `Attachment.size` already kept in the type for limits/errors
+- Failed-upload alerting (partially covered by the optimistic-post alert)

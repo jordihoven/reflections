@@ -5,6 +5,7 @@ import { LogOut } from "lucide-react";
 import { Composer } from "./components/composer";
 import { ReflectionItem } from "./components/reflection-item";
 import { Login } from "./components/login";
+import type { Attachment, Reflection } from "./components/types";
 import {
   createReflection,
   deleteReflection,
@@ -14,7 +15,6 @@ import {
   signOut,
   subscribeAuth,
 } from "./lib/atproto";
-import type { Reflection } from "./components/types";
 
 export default function Home() {
   const auth = useSyncExternalStore(subscribeAuth, getAuthState, getAuthState);
@@ -32,13 +32,29 @@ export default function Home() {
       .catch(() => setReflections([]));
   }, [auth.status]);
 
-  const add = async (text: string) => {
-    try {
-      const r = await createReflection(text);
-      setReflections((prev) => [r, ...prev]);
-    } catch {
-      window.alert("Couldn't save this reflection. Try again.");
-    }
+  const add = (text: string, attachments: Attachment[]) => {
+    // optimistic: render from composer data (dataUrl) immediately, swap in the
+    // persisted PDS-backed record once blob upload + record write finish
+    const tempId = `tmp-${crypto.randomUUID()}`;
+    const temp: Reflection = {
+      id: tempId,
+      text,
+      createdAt: new Date().toISOString(),
+      attachments: attachments.map((a) => ({ ...a })),
+    };
+    setReflections((prev) => [temp, ...prev]);
+    createReflection(text, attachments)
+      .then((r) =>
+        setReflections((prev) => prev.map((x) => (x.id === tempId ? r : x))),
+      )
+      .catch((e) => {
+        setReflections((prev) => prev.filter((x) => x.id !== tempId));
+        window.alert(
+          `Couldn't save this reflection. ${
+            e instanceof Error && e.message ? e.message : "Try again."
+          }`,
+        );
+      });
   };
 
   const remove = async (id: string) => {
@@ -77,7 +93,7 @@ export default function Home() {
           <LogOut size={16} />
         </button>
       </div>
-      <Composer onPost={(text) => void add(text)} />
+      <Composer onPost={(text, attachments) => void add(text, attachments)} />
       <ul className="flex flex-col gap-3">
         {reflections.map((r) => (
           <ReflectionItem
