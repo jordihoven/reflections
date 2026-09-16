@@ -209,22 +209,33 @@ export async function listReflections(): Promise<Reflection[]> {
 export async function createReflection(
   text: string,
   attachments: Attachment[],
-): Promise<Reflection> {
+): Promise<{ reflection: Reflection; failedFiles: string[] }> {
   const a = requireAgent();
   const uploaded: StoredAttachment[] = [];
+  const failedFiles: string[] = [];
   for (const att of attachments) {
     if (!att.file) continue;
-    // sequential: no parallel burst while large blobs upload
-    const { data } = await a.com.atproto.repo.uploadBlob(att.file);
-    uploaded.push({
-      name: att.name,
-      blob: {
-        $type: "blob",
-        ref: { $link: data.blob.ref.toString() },
-        mimeType: data.blob.mimeType,
-        size: data.blob.size,
-      },
-    });
+    // sequential: no parallel burst while large blobs upload.
+    // PDS is the type/size authority — upload anyway, surface rejections.
+    try {
+      const { data } = await a.com.atproto.repo.uploadBlob(att.file);
+      uploaded.push({
+        name: att.name,
+        blob: {
+          $type: "blob",
+          ref: { $link: data.blob.ref.toString() },
+          mimeType: data.blob.mimeType,
+          size: data.blob.size,
+        },
+      });
+    } catch (err) {
+      failedFiles.push(
+        `${att.name} (${err instanceof Error ? err.message : "rejected by server"})`,
+      );
+    }
+  }
+  if (uploaded.length === 0 && attachments.some((a) => a.file)) {
+    throw new Error(`No attachments could be uploaded: ${failedFiles.join(", ")}`);
   }
   const record = {
     text,
@@ -239,7 +250,15 @@ export async function createReflection(
   const saved: Attachment[] = uploaded
     .map(storedToAttachment)
     .filter((a): a is Attachment => a !== undefined);
-  return { id: data.uri, text, createdAt: record.createdAt, attachments: saved.length ? saved : undefined };
+  return {
+    reflection: {
+      id: data.uri,
+      text,
+      createdAt: record.createdAt,
+      attachments: saved.length ? saved : undefined,
+    },
+    failedFiles,
+  };
 }
 
 export async function updateReflection(uri: string, text: string) {

@@ -8,7 +8,7 @@
 # Features 🚀
 
 - rename reflections to thoughts, so reflection-item becomes thoughtComponent and all mentions in code become thought...
-- rename lexicon to 'reflections.thought'
+- edit attachments
 - Add b, italic and underline style. maybe even background colors
 - Add lists support
 - Add rich styled links
@@ -20,13 +20,9 @@
 - .select style: outline, muted primary
 - .active style: outline, muted secondary
 - transition on the composer shrinking back to 'normal' size after posting
-- edit thought action
-  ![reflections.netlify.app editing](image-3.png)
 - when thought is selected, show actions (edit, delete, link) for all selected (show count of selected)
-- restyle timestamp: more muted
 - rename reflections to thoughts, or Yuragi?
 - make square logo, use that in manifest.json
-- thought text medium instead of regular?
 - infinite loader on thoughts -> load 20 first, then when reach bottom, load 10 more etc?
 
 - on /login, show a firehose? of thoughts on the lexicon (like arabica coffee loggers login!)

@@ -46,9 +46,13 @@ export default function Home() {
     };
     setReflections((prev) => [temp, ...prev]);
     createReflection(text, attachments)
-      .then((r) =>
-        setReflections((prev) => prev.map((x) => (x.id === tempId ? r : x))),
-      )
+      .then(({ reflection, failedFiles }) => {
+        setReflections((prev) =>
+          prev.map((x) => (x.id === tempId ? reflection : x)),
+        );
+        if (failedFiles.length)
+          window.alert(`PDS rejected and skipped: ${failedFiles.join(", ")}`);
+      })
       .catch((e) => {
         setReflections((prev) => prev.filter((x) => x.id !== tempId));
         window.alert(

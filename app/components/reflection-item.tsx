@@ -27,7 +27,7 @@ export function ReflectionItem({
         if (revealed) onHide();
         else onReveal();
       }}
-      className={`flex flex-col gap-2 rounded-xl border p-3 transition-all duration-400 ${
+      className={`cursor-pointer flex flex-col gap-2 rounded-xl border p-3 transition-all duration-400 ${
         revealed
           ? "border-border bg-card blur-none opacity-100 shadow-[0px_2px_12px_rgba(0,0,0,0.08)]"
           : "border-transparent blur-[2px] opacity-50"
@@ -45,7 +45,14 @@ export function ReflectionItem({
       {reflection.attachments && reflection.attachments.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {reflection.attachments.map((a) =>
-            a.type.startsWith("image/") && (a.dataUrl ?? a.url) ? (
+            a.type.startsWith("video/") && (a.dataUrl ?? a.url) ? (
+              <video
+                key={a.id}
+                src={a.dataUrl ?? a.url}
+                controls
+                className="max-h-48 w-full rounded-lg"
+              />
+            ) : a.type.startsWith("image/") && (a.dataUrl ?? a.url) ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 key={a.id}

@@ -20,21 +20,16 @@ export function Composer({
 }) {
   const [text, setText] = useState(initialText ?? "");
   const [attachments, setAttachments] = useState<Attachment[]>([]);
-  const [notice, setNotice] = useState("");
   const [dragActive, setDragActive] = useState(false);
   const dragDepth = useRef(0);
 
-
   const acceptFiles = async (files: File[]) => {
-    const { attachments: next, skipped } = await filesToAttachments(files);
+    const next = await filesToAttachments(files);
     setAttachments((prev) => [...prev, ...next]);
-    if (skipped.length) setNotice(`Skipped (unallowed type): ${skipped.join(", ")}`);
-    else setNotice("");
   };
 
   const removeAttachment = (id: string) => {
     setAttachments((prev) => prev.filter((a) => a.id !== id));
-    setNotice("");
   };
 
   const post = () => {
@@ -44,7 +39,6 @@ export function Composer({
     if (initialText === undefined) {
       setText("");
       setAttachments([]);
-      setNotice("");
       setDragActive(false);
     }
   };
@@ -136,8 +130,6 @@ export function Composer({
           )}
         </div>
       )}
-
-      {notice && <p className="text-[13px] text-muted">{notice}</p>}
 
       <div className="flex w-full items-center">
         {!editing && <AddFilesButton onSelect={acceptFiles} />}

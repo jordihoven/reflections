@@ -4,13 +4,6 @@ import { useRef } from "react";
 import { ImagePlus } from "lucide-react";
 import type { Attachment } from "./types";
 
-// PDS is the size/count authority — no client-side caps. Only type is filtered here.
-const ALLOWED_TYPES = ["image/", "audio/", "text/plain", "text/markdown"];
-
-function isAllowedType(type: string) {
-  return ALLOWED_TYPES.some((t) => (t.endsWith("/") ? type.startsWith(t) : type === t));
-}
-
 function readAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -20,15 +13,9 @@ function readAsDataUrl(file: File): Promise<string> {
   });
 }
 
-export async function filesToAttachments(
-  files: File[],
-): Promise<{ attachments: Attachment[]; skipped: string[] }> {
-  const allowed = files.filter((f) => isAllowedType(f.type));
-  const skipped = files
-    .filter((f) => !isAllowedType(f.type))
-    .map((f) => f.name);
-  const attachments = await Promise.all(
-    allowed.map(async (f) => ({
+export async function filesToAttachments(files: File[]): Promise<Attachment[]> {
+  return Promise.all(
+    files.map(async (f) => ({
       id: crypto.randomUUID(),
       name: f.name,
       type: f.type,
@@ -37,10 +24,13 @@ export async function filesToAttachments(
       dataUrl: await readAsDataUrl(f),
     })),
   );
-  return { attachments, skipped };
 }
 
-export function AddFilesButton({ onSelect }: { onSelect: (files: File[]) => void }) {
+export function AddFilesButton({
+  onSelect,
+}: {
+  onSelect: (files: File[]) => void;
+}) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   return (
@@ -59,7 +49,6 @@ export function AddFilesButton({ onSelect }: { onSelect: (files: File[]) => void
         id="composer-files"
         type="file"
         multiple
-        accept="image/*,audio/*,text/plain,text/markdown,text/md"
         className="hidden"
         onChange={(e) => {
           onSelect(Array.from(e.target.files ?? []));
