@@ -1,6 +1,7 @@
 "use client";
 
 import { FileText, Pencil, Trash2 } from "lucide-react";
+import { linkify } from "./linkify";
 import type { Reflection } from "./types";
 
 export function ReflectionItem({
@@ -39,7 +40,7 @@ export function ReflectionItem({
             revealed ? "text-foreground" : "text-muted"
           }`}
         >
-          {reflection.text}
+          {linkify(reflection.text)}
         </p>
       )}
       {reflection.attachments && reflection.attachments.length > 0 && (

@@ -3,6 +3,7 @@
 import { useRef, useState, type DragEvent } from "react";
 import { FileText, X } from "lucide-react";
 import { AddFilesButton, filesToAttachments } from "./attachments";
+import { linkify } from "./linkify";
 import type { Attachment } from "./types";
 
 const MAX_LENGTH = 1000; // subject to change, but need some cap...
@@ -73,16 +74,24 @@ export function Composer({
           : "border-border hover:border-primary hover:ring-2 hover:ring-primary/50 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/50"
       }`}
     >
-      <textarea
-        value={text}
-        onChange={(e) => {
-          setText(e.target.value);
-        }}
-        placeholder="What's on your mind?"
-        maxLength={MAX_LENGTH}
-        rows={1}
-        className="w-full resize-none overflow-auto bg-transparent text-base leading-[1.7] font-medium text-foreground placeholder:text-muted focus:outline-none [field-sizing:content]"
-      />
+      <div className="relative">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 overflow-hidden text-base leading-[1.7] font-medium whitespace-pre-wrap overflow-wrap-break-word"
+        >
+          {linkify(text, false)}
+        </div>
+        <textarea
+          value={text}
+          onChange={(e) => {
+            setText(e.target.value);
+          }}
+          placeholder="What's on your mind?"
+          maxLength={MAX_LENGTH}
+          rows={1}
+          className="relative w-full resize-none overflow-auto bg-transparent text-base leading-[1.7] font-medium text-transparent caret-foreground selection:text-transparent placeholder:text-muted focus:outline-none [field-sizing:content]"
+        />
+      </div>
 
       {attachments.length > 0 && (
         <div className="flex flex-wrap items-center gap-2">
