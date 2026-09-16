@@ -130,33 +130,11 @@ export default function Home() {
     return () => obs.disconnect();
   }, [loadMore]);
 
-  const add = (text: string, attachments: Attachment[]) => {
-    // optimistic: render from composer data (dataUrl) immediately, swap in the
-    // persisted PDS-backed record once blob upload + record write finish
-    const tempId = `tmp-${crypto.randomUUID()}`;
-    const temp: Reflection = {
-      id: tempId,
-      text,
-      createdAt: new Date().toISOString(),
-      attachments,
-    };
-    setReflections((prev) => [temp, ...prev]);
-    createReflection(text, attachments)
-      .then(({ reflection, failedFiles }) => {
-        setReflections((prev) =>
-          prev.map((x) => (x.id === tempId ? reflection : x)),
-        );
-        if (failedFiles.length)
-          window.alert(`PDS rejected and skipped: ${failedFiles.join(", ")}`);
-      })
-      .catch((e) => {
-        setReflections((prev) => prev.filter((x) => x.id !== tempId));
-        window.alert(
-          `Couldn't save this reflection. ${
-            e instanceof Error && e.message ? e.message : "Try again."
-          }`,
-        );
-      });
+  const add = async (text: string, attachments: Attachment[]) => {
+    const { reflection, failedFiles } = await createReflection(text, attachments);
+    setReflections((prev) => [reflection, ...prev]);
+    if (failedFiles.length)
+      window.alert(`PDS rejected and skipped: ${failedFiles.join(", ")}`);
   };
 
   const remove = async (id: string) => {
@@ -209,7 +187,7 @@ export default function Home() {
           <LogOut size={16} />
         </button>
       </div>
-      <Composer onPost={(text, attachments) => void add(text, attachments)} />
+      <Composer onPost={(text, attachments) => add(text, attachments)} />
       <ul className="flex flex-col gap-3">
         {grouped.map((entry) =>
           entry.type === "header" ? (
@@ -225,7 +203,7 @@ export default function Home() {
               initialText={entry.reflection.text}
               label="Save"
               onCancel={() => setEditingId(null)}
-              onPost={(text) => void update(entry.reflection.id, text)}
+              onPost={(text) => update(entry.reflection.id, text)}
             />
           ) : (
             <ReflectionItem

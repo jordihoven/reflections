@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, type DragEvent } from "react";
-import { FileText, X } from "lucide-react";
+import { FileText, Loader2, X } from "lucide-react";
 import { AddFilesButton, filesToAttachments } from "./attachments";
 import { linkify } from "./linkify";
 import type { Attachment } from "./types";
@@ -14,7 +14,7 @@ export function Composer({
   label = "Post",
   onCancel,
 }: {
-  onPost: (text: string, attachments: Attachment[]) => void;
+  onPost: (text: string, attachments: Attachment[]) => Promise<void>;
   initialText?: string;
   label?: string;
   onCancel?: () => void;
@@ -22,6 +22,8 @@ export function Composer({
   const [text, setText] = useState(initialText ?? "");
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [dragActive, setDragActive] = useState(false);
+  const [posting, setPosting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const dragDepth = useRef(0);
 
   const acceptFiles = async (files: File[]) => {
@@ -33,14 +35,24 @@ export function Composer({
     setAttachments((prev) => prev.filter((a) => a.id !== id));
   };
 
-  const post = () => {
+  const post = async () => {
     const trimmed = text.trim();
     if (!trimmed && attachments.length === 0) return;
-    onPost(trimmed, attachments);
-    if (initialText === undefined) {
-      setText("");
-      setAttachments([]);
-      setDragActive(false);
+    setPosting(true);
+    setError(null);
+    try {
+      await onPost(trimmed, attachments);
+      if (initialText === undefined) {
+        setText("");
+        setAttachments([]);
+        setDragActive(false);
+      }
+    } catch (e) {
+      setError(
+        e instanceof Error && e.message ? e.message : "Unable to post... 🥺",
+      );
+    } finally {
+      setPosting(false);
     }
   };
 
@@ -89,7 +101,8 @@ export function Composer({
           placeholder="What's on your mind?"
           maxLength={MAX_LENGTH}
           rows={1}
-          className="relative w-full resize-none overflow-auto bg-transparent text-base leading-[1.7] font-medium text-transparent caret-foreground selection:text-transparent placeholder:text-muted focus:outline-none [field-sizing:content]"
+          disabled={posting}
+          className="relative w-full resize-none overflow-auto bg-transparent text-base leading-[1.7] font-medium text-transparent caret-foreground selection:text-transparent placeholder:text-muted focus:outline-none [field-sizing:content] disabled:opacity-50"
         />
       </div>
 
@@ -137,6 +150,9 @@ export function Composer({
       <div className="flex w-full items-center">
         {!editing && <AddFilesButton onSelect={acceptFiles} />}
         <div className="ml-auto flex items-center gap-2">
+          {error && (
+            <span className="text-[13px] text-destructive">{error}</span>
+          )}
           {onCancel && (
             <button
               type="button"
@@ -149,9 +165,10 @@ export function Composer({
           <button
             type="button"
             onClick={post}
-            disabled={!text.trim() && attachments.length === 0}
+            disabled={posting || (!text.trim() && attachments.length === 0)}
             className="flex cursor-pointer items-center gap-1.5 rounded-full border border-primary bg-primary px-3 py-1 text-[14px] font-semibold text-white transition-opacity duration-200 hover:opacity-90 disabled:opacity-30"
           >
+            {posting && <Loader2 size={14} className="animate-spin" />}
             {label}
           </button>
         </div>
