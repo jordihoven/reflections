@@ -14,6 +14,9 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: "default",
   },
+  icons: {
+    apple: "/logo-xl.png",
+  },
 };
 
 export const viewport: Viewport = {

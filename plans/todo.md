@@ -7,22 +7,25 @@
 
 # Features 🚀
 
-- rename reflections to thoughts, so reflection-item becomes thoughtComponent and all mentions in code become thought...
+- rename reflections to thoughts, or Yuragi?
+
+- swipe gestures: left/right on thought = select, down on page = refresh
+- back to top when composer is out of view OR fixed composer so thoughts flow underneath?
+
+- when thought is selected, show actions (edit, delete, link) for all selected (show count of selected)
+
 - edit attachments
+
 - Add b, italic and underline style. maybe even background colors
 - Add lists support
 - Add rich styled links
+
 - /thought page, showing content of thought + login + like + comment? design this first
-- swipe down to refresh (or, is this not needed? can we look at a websocket/firehose for changes?)
-- back to top when composer is out of view OR fixed composer so thoughts flow underneath?
-- mp4 support
-- select thoughts on swipe (left/right, even desktop)
+
 - .select style: outline, muted primary
 - .active style: outline, muted secondary
 - transition on the composer shrinking back to 'normal' size after posting
-- when thought is selected, show actions (edit, delete, link) for all selected (show count of selected)
-- rename reflections to thoughts, or Yuragi?
-- make square logo, use that in manifest.json
+
 - infinite loader on thoughts -> load 20 first, then when reach bottom, load 10 more etc?
 
 - on /login, show a firehose? of thoughts on the lexicon (like arabica coffee loggers login!)
