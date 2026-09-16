@@ -164,6 +164,8 @@ function blobCid(blob: unknown): string | undefined {
 type StoredAttachment = {
   name?: string;
   blob: unknown;
+  width?: number;
+  height?: number;
 };
 
 function storedToAttachment(did: string, s: StoredAttachment): Attachment | undefined {
@@ -175,6 +177,8 @@ function storedToAttachment(did: string, s: StoredAttachment): Attachment | unde
     name: s.name ?? "file",
     type: blob.mimeType ?? "application/octet-stream",
     size: blob.size ?? 0,
+    width: s.width,
+    height: s.height,
     url: blobUrlFor(did, cid),
   };
 }
@@ -222,6 +226,8 @@ export async function createReflection(
       const { data } = await a.com.atproto.repo.uploadBlob(att.file);
       uploaded.push({
         name: att.name,
+        width: att.width,
+        height: att.height,
         blob: {
           $type: "blob",
           ref: { $link: data.blob.ref.toString() },

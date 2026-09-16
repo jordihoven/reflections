@@ -1,8 +1,35 @@
 "use client";
 
+import { useState } from "react";
 import { FileText, Pencil, Trash2 } from "lucide-react";
 import { linkify } from "./linkify";
-import type { Reflection } from "./types";
+import type { Attachment, Reflection } from "./types";
+
+function AttachmentImage({ a }: { a: Attachment }) {
+  const [loaded, setLoaded] = useState(() => !a.url);
+  return (
+    <div className="relative w-full">
+      {!loaded && (
+        <div
+          aria-hidden
+          className="absolute inset-0 animate-pulse rounded-lg bg-subtle"
+        />
+      )}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={a.dataUrl ?? a.url}
+        alt={a.name}
+        width={a.width}
+        height={a.height}
+        decoding="async"
+        onLoad={() => setLoaded(true)}
+        className={`max-h-48 w-full rounded-lg object-cover transition-opacity duration-300 ${
+          loaded ? "opacity-100" : "opacity-0"
+        }`}
+      />
+    </div>
+  );
+}
 
 export function ReflectionItem({
   reflection,
@@ -54,13 +81,7 @@ export function ReflectionItem({
                 className="max-h-48 w-full rounded-lg"
               />
             ) : a.type.startsWith("image/") && (a.dataUrl ?? a.url) ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                key={a.id}
-                src={a.dataUrl ?? a.url}
-                alt={a.name}
-                className="max-h-48 w-full rounded-lg object-cover"
-              />
+              <AttachmentImage key={a.id} a={a} />
             ) : a.url ? (
               <a
                 key={a.id}

@@ -13,16 +13,33 @@ function readAsDataUrl(file: File): Promise<string> {
   });
 }
 
+function readImageDimensions(src: string): Promise<{ width: number; height: number } | undefined> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
+    img.onerror = () => resolve(undefined);
+    img.src = src;
+  });
+}
+
 export async function filesToAttachments(files: File[]): Promise<Attachment[]> {
   return Promise.all(
-    files.map(async (f) => ({
-      id: crypto.randomUUID(),
-      name: f.name,
-      type: f.type,
-      size: f.size,
-      file: f,
-      dataUrl: await readAsDataUrl(f),
-    })),
+    files.map(async (f) => {
+      const dataUrl = await readAsDataUrl(f);
+      const dims = f.type.startsWith("image/")
+        ? await readImageDimensions(dataUrl)
+        : undefined;
+      return {
+        id: crypto.randomUUID(),
+        name: f.name,
+        type: f.type,
+        size: f.size,
+        width: dims?.width,
+        height: dims?.height,
+        file: f,
+        dataUrl,
+      };
+    }),
   );
 }
 
