@@ -17,6 +17,63 @@ import {
   updateReflection,
 } from "./lib/atproto";
 
+type GroupedEntry =
+  | { type: "header"; label: string; dateKey: string }
+  | { type: "item"; reflection: Reflection };
+
+function formatDayLabel(createdAt: string): string {
+  const now = new Date();
+  const todayUtc = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+  );
+  const post = new Date(createdAt);
+  const postUtc = new Date(
+    Date.UTC(post.getUTCFullYear(), post.getUTCMonth(), post.getUTCDate()),
+  );
+  const diffDays = Math.round(
+    (todayUtc.getTime() - postUtc.getTime()) / 86_400_000,
+  );
+
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Yesterday";
+
+  const dayFmt = new Intl.DateTimeFormat("en-GB", {
+    weekday: "long",
+    timeZone: "UTC",
+  });
+  if (diffDays < 7) return dayFmt.format(postUtc);
+
+  const dateFmt = new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "long",
+    timeZone: "UTC",
+  });
+  const formatted = dateFmt.format(postUtc);
+
+  return post.getUTCFullYear() === todayUtc.getUTCFullYear()
+    ? formatted
+    : `${formatted} ${post.getUTCFullYear()}`;
+}
+
+function groupByDate(reflections: Reflection[]): GroupedEntry[] {
+  const entries: GroupedEntry[] = [];
+  let lastKey = "";
+  for (const r of reflections) {
+    const d = new Date(r.createdAt);
+    const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+    if (key !== lastKey) {
+      entries.push({
+        type: "header",
+        label: formatDayLabel(r.createdAt),
+        dateKey: key,
+      });
+      lastKey = key;
+    }
+    entries.push({ type: "item", reflection: r });
+  }
+  return entries;
+}
+
 export default function Home() {
   const auth = useSyncExternalStore(subscribeAuth, getAuthState, getAuthState);
   const [reflections, setReflections] = useState<Reflection[]>([]);
@@ -98,6 +155,8 @@ export default function Home() {
     );
   }
 
+  const grouped = groupByDate(reflections);
+
   return (
     <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-6 px-4 py-8">
       <div className="flex items-center justify-end">
@@ -113,21 +172,28 @@ export default function Home() {
       </div>
       <Composer onPost={(text, attachments) => void add(text, attachments)} />
       <ul className="flex flex-col gap-3">
-        {reflections.map((r) =>
-          r.id === editingId ? (
+        {grouped.map((entry) =>
+          entry.type === "header" ? (
+            <li
+              key={entry.dateKey}
+              className="pt-2 text-[13px] font-medium tracking-wide text-muted"
+            >
+              {entry.label}
+            </li>
+          ) : entry.reflection.id === editingId ? (
             <Composer
-              key={r.id}
-              initialText={r.text}
+              key={entry.reflection.id}
+              initialText={entry.reflection.text}
               label="Save"
               onCancel={() => setEditingId(null)}
-              onPost={(text) => void update(r.id, text)}
+              onPost={(text) => void update(entry.reflection.id, text)}
             />
           ) : (
             <ReflectionItem
-              key={r.id}
-              reflection={r}
-              revealed={r.id === revealedId}
-              onReveal={() => setRevealedId(r.id)}
+              key={entry.reflection.id}
+              reflection={entry.reflection}
+              revealed={entry.reflection.id === revealedId}
+              onReveal={() => setRevealedId(entry.reflection.id)}
               onHide={() => setRevealedId(null)}
               onEdit={(id) => setEditingId(id)}
               onDelete={remove}
