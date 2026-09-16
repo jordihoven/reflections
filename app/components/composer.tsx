@@ -78,13 +78,6 @@ export function Composer({
         onChange={(e) => {
           setText(e.target.value);
         }}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && !e.shiftKey && !("ontouchstart" in window)) {
-            // desktop enter = post, mobile enter = newline...
-            e.preventDefault();
-            post();
-          }
-        }}
         placeholder="What's on your mind?"
         maxLength={MAX_LENGTH}
         rows={1}
@@ -99,13 +92,13 @@ export function Composer({
                 <img
                   src={a.dataUrl}
                   alt={a.name}
-                  className="h-16 w-16 rounded-lg object-cover"
+                  className="h-20 w-20 rounded-lg object-cover"
                 />
                 <button
                   type="button"
                   onClick={() => removeAttachment(a.id)}
                   aria-label={`Remove ${a.name}`}
-                  className="absolute -top-1.5 -right-1.5 flex cursor-pointer items-center justify-center rounded-full bg-inverse p-0.5 text-white opacity-80 transition-opacity hover:opacity-100"
+                  className="absolute top-1 right-1 flex cursor-pointer items-center justify-center rounded-full bg-inverse p-0.5 text-white opacity-80 transition-opacity hover:opacity-100"
                 >
                   <X size={12} />
                 </button>
