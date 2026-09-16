@@ -12,7 +12,7 @@ export const COLLECTION = "app.reflections.reflection";
 const SCOPE = "atproto transition:generic";
 
 const CLIENT_ID = "https://reflections-gules.vercel.app/client-metadata.json";
-const REFLECTION_LIMIT = 100;
+const PAGE_SIZE = 20;
 
 const handleResolver = new AtprotoDohHandleResolver({
   dohEndpoint: "https://cloudflare-dns.com/dns-query",
@@ -183,32 +183,37 @@ function storedToAttachment(did: string, s: StoredAttachment): Attachment | unde
   };
 }
 
-export async function listReflections(): Promise<Reflection[]> {
+export async function listReflections(
+  cursor?: string,
+): Promise<{ reflections: Reflection[]; cursor: string | null }> {
   const a = requireAgent();
   const did = a.assertDid;
   const { data } = await a.com.atproto.repo.listRecords({
     repo: did,
     collection: COLLECTION,
-    limit: REFLECTION_LIMIT,
-    reverse: true,
+    limit: PAGE_SIZE,
+    ...(cursor ? { cursor } : {}),
   });
-  return data.records
-    .map(({ uri, value }) => {
-      const v = value as {
-        text?: string;
-        createdAt: string;
-        attachments?: StoredAttachment[];
-      };
-      return {
-        id: uri,
-        text: v.text ?? "",
-        createdAt: v.createdAt,
-        attachments: v.attachments
-          ?.map((s) => storedToAttachment(did, s))
-          .filter((a): a is Attachment => a !== undefined),
-      };
-    })
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  return {
+    reflections: data.records
+      .map(({ uri, value }) => {
+        const v = value as {
+          text?: string;
+          createdAt: string;
+          attachments?: StoredAttachment[];
+        };
+        return {
+          id: uri,
+          text: v.text ?? "",
+          createdAt: v.createdAt,
+          attachments: v.attachments
+            ?.map((s) => storedToAttachment(did, s))
+            .filter((a): a is Attachment => a !== undefined),
+        };
+      })
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    cursor: data.cursor ?? null,
+  };
 }
 
 export async function createReflection(

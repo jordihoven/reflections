@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { LogOut } from "lucide-react";
 import { Composer } from "./components/composer";
 import { ReflectionItem } from "./components/reflection-item";
@@ -79,6 +85,9 @@ export default function Home() {
   const [reflections, setReflections] = useState<Reflection[]>([]);
   const [revealedId, setRevealedId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [cursor, setCursor] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     void initSession();
@@ -86,10 +95,40 @@ export default function Home() {
 
   useEffect(() => {
     if (auth.status !== "signedIn") return;
+    setLoading(true);
     void listReflections()
-      .then(setReflections)
-      .catch(() => setReflections([]));
+      .then(({ reflections: r, cursor: c }) => {
+        setReflections(r);
+        setCursor(c);
+      })
+      .catch(() => setReflections([]))
+      .finally(() => setLoading(false));
   }, [auth.status]);
+
+  const loadMore = useCallback(() => {
+    if (loading || !cursor) return;
+    setLoading(true);
+    void listReflections(cursor)
+      .then(({ reflections: r, cursor: c }) => {
+        setReflections((prev) => [...prev, ...r]);
+        setCursor(c);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [loading, cursor]);
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) loadMore();
+      },
+      { rootMargin: "200px" },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [loadMore]);
 
   const add = (text: string, attachments: Attachment[]) => {
     // optimistic: render from composer data (dataUrl) immediately, swap in the
@@ -200,8 +239,15 @@ export default function Home() {
             />
           ),
         )}
-        {reflections.length === 0 && (
+        {reflections.length === 0 && !loading && (
           <p className="text-center text-muted">No reflections to show...</p>
+        )}
+        <div ref={sentinelRef} className="h-px" />
+        {loading && (
+          <p className="text-center text-sm text-muted">Loading...</p>
+        )}
+        {cursor === null && reflections.length > 0 && (
+          <p className="text-center text-sm text-muted">The end ✨</p>
         )}
       </ul>
     </main>
