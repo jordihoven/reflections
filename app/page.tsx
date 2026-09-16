@@ -86,7 +86,7 @@ export default function Home() {
   const [revealedId, setRevealedId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [cursor, setCursor] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -95,7 +95,6 @@ export default function Home() {
 
   useEffect(() => {
     if (auth.status !== "signedIn") return;
-    setLoading(true);
     void listReflections()
       .then(({ reflections: r, cursor: c }) => {
         setReflections(r);
