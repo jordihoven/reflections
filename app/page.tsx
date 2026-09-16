@@ -99,7 +99,7 @@ export default function Home() {
       id: tempId,
       text,
       createdAt: new Date().toISOString(),
-      attachments: attachments.map((a) => ({ ...a })),
+      attachments,
     };
     setReflections((prev) => [temp, ...prev]);
     createReflection(text, attachments)

@@ -9,7 +9,7 @@ import type { Attachment, Reflection } from "../components/types";
 export const COLLECTION = "app.reflections.reflection";
 // `atproto` = auth-only. `transition:generic` = write any record + upload blobs.
 // Universally supported across all PDSes (old app-password level).
-export const SCOPE = "atproto transition:generic";
+const SCOPE = "atproto transition:generic";
 
 const CLIENT_ID = "https://reflections-gules.vercel.app/client-metadata.json";
 const REFLECTION_LIMIT = 100;
@@ -134,10 +134,10 @@ function requireAgent(): Agent {
   return agent;
 }
 
-function blobUrlFor(cid: string): string | undefined {
+function blobUrlFor(did: string, cid: string): string | undefined {
   if (!pdsUrl) return undefined;
   const url = new URL("/xrpc/com.atproto.sync.getBlob", pdsUrl);
-  url.searchParams.set("did", agent!.assertDid);
+  url.searchParams.set("did", did);
   url.searchParams.set("cid", cid);
   return url.toString();
 }
@@ -166,7 +166,7 @@ type StoredAttachment = {
   blob: unknown;
 };
 
-function storedToAttachment(s: StoredAttachment): Attachment | undefined {
+function storedToAttachment(did: string, s: StoredAttachment): Attachment | undefined {
   const cid = blobCid(s.blob);
   if (!cid) return undefined;
   const blob = (s.blob ?? {}) as { mimeType?: string; size?: number };
@@ -175,35 +175,34 @@ function storedToAttachment(s: StoredAttachment): Attachment | undefined {
     name: s.name ?? "file",
     type: blob.mimeType ?? "application/octet-stream",
     size: blob.size ?? 0,
-    url: blobUrlFor(cid),
+    url: blobUrlFor(did, cid),
   };
 }
 
 export async function listReflections(): Promise<Reflection[]> {
   const a = requireAgent();
+  const did = a.assertDid;
   const { data } = await a.com.atproto.repo.listRecords({
-    repo: a.assertDid,
+    repo: did,
     collection: COLLECTION,
     limit: REFLECTION_LIMIT,
     reverse: true,
   });
-  return data.records
-    .map(({ uri, value }) => {
-      const v = value as {
-        text?: string;
-        createdAt: string;
-        attachments?: StoredAttachment[];
-      };
-      return {
-        id: uri,
-        text: v.text ?? "",
-        createdAt: v.createdAt,
-        attachments: v.attachments
-          ?.map(storedToAttachment)
-          .filter((a): a is Attachment => a !== undefined),
-      };
-    })
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  return data.records.map(({ uri, value }) => {
+    const v = value as {
+      text?: string;
+      createdAt: string;
+      attachments?: StoredAttachment[];
+    };
+    return {
+      id: uri,
+      text: v.text ?? "",
+      createdAt: v.createdAt,
+      attachments: v.attachments
+        ?.map((s) => storedToAttachment(did, s))
+        .filter((a): a is Attachment => a !== undefined),
+    };
+  });
 }
 
 export async function createReflection(
@@ -248,7 +247,7 @@ export async function createReflection(
     record,
   });
   const saved: Attachment[] = uploaded
-    .map(storedToAttachment)
+    .map((s) => storedToAttachment(a.assertDid, s))
     .filter((a): a is Attachment => a !== undefined);
   return {
     reflection: {

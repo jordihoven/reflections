@@ -46,7 +46,6 @@ export function AddFilesButton({
       </button>
       <input
         ref={inputRef}
-        id="composer-files"
         type="file"
         multiple
         className="hidden"

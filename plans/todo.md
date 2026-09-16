@@ -18,7 +18,6 @@
 
 - Add b, italic and underline style. maybe even background colors
 - Add lists support
-- Add rich styled links
 
 - /thought page, showing content of thought + login + like + comment? design this first
 

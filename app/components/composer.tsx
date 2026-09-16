@@ -98,6 +98,7 @@ export function Composer({
           {attachments.map((a) =>
             a.type.startsWith("image/") ? (
               <span key={a.id} className="group/thumb relative">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={a.dataUrl}
                   alt={a.name}
