@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, type DragEvent } from "react";
 import { FileText, X } from "lucide-react";
 import { AddFilesButton, filesToAttachments } from "./attachments";
 import type { Attachment } from "./types";
@@ -9,10 +9,16 @@ const MAX_LENGTH = 1000; // subject to change, but need some cap...
 
 export function Composer({
   onPost,
+  initialText,
+  label = "Post",
+  onCancel,
 }: {
   onPost: (text: string, attachments: Attachment[]) => void;
+  initialText?: string;
+  label?: string;
+  onCancel?: () => void;
 }) {
-  const [text, setText] = useState("");
+  const [text, setText] = useState(initialText ?? "");
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [notice, setNotice] = useState("");
   const [dragActive, setDragActive] = useState(false);
@@ -35,30 +41,39 @@ export function Composer({
     const trimmed = text.trim();
     if (!trimmed && attachments.length === 0) return;
     onPost(trimmed, attachments);
-    setText("");
-    setAttachments([]);
-    setNotice("");
-    setDragActive(false);
+    if (initialText === undefined) {
+      setText("");
+      setAttachments([]);
+      setNotice("");
+      setDragActive(false);
+    }
   };
+
+  const editing = initialText !== undefined;
+  const dropHandlers = editing
+    ? {}
+    : {
+        onDragEnter: (e: DragEvent) => {
+          e.preventDefault();
+          if (++dragDepth.current === 1) setDragActive(true);
+        },
+        onDragOver: (e: DragEvent) => e.preventDefault(),
+        onDragLeave: (e: DragEvent) => {
+          e.preventDefault();
+          if (--dragDepth.current === 0) setDragActive(false);
+        },
+        onDrop: (e: DragEvent) => {
+          e.preventDefault();
+          dragDepth.current = 0;
+          setDragActive(false);
+          acceptFiles(Array.from(e.dataTransfer.files));
+        },
+      };
 
   return (
     <div
-      onDragEnter={(e) => {
-        e.preventDefault();
-        if (++dragDepth.current === 1) setDragActive(true);
-      }}
-      onDragOver={(e) => e.preventDefault()}
-      onDragLeave={(e) => {
-        e.preventDefault();
-        if (--dragDepth.current === 0) setDragActive(false);
-      }}
-      onDrop={(e) => {
-        e.preventDefault();
-        dragDepth.current = 0;
-        setDragActive(false);
-        acceptFiles(Array.from(e.dataTransfer.files));
-      }}
-      className={`group flex flex-col gap-3 rounded-xl border bg-card p-2 px-3 shadow-[0px_1px_8px_rgba(0,0,0,0.06)] transition-all duration-200 ${
+      {...dropHandlers}
+      className={`group flex flex-col gap-2 rounded-xl border bg-card p-3 shadow-[0px_1px_8px_rgba(0,0,0,0.06)] transition-all duration-200 ${
         dragActive
           ? "border-primary ring-2 ring-primary/50"
           : "border-border hover:border-primary hover:ring-2 hover:ring-primary/50 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/50"
@@ -79,7 +94,7 @@ export function Composer({
         placeholder="What's on your mind?"
         maxLength={MAX_LENGTH}
         rows={1}
-        className="w-full resize-none overflow-auto bg-transparent text-base leading-loose font-medium text-foreground placeholder:text-muted focus:outline-none [field-sizing:content]"
+        className="w-full resize-none overflow-auto bg-transparent text-base leading-[1.7] font-medium text-foreground placeholder:text-muted focus:outline-none [field-sizing:content]"
       />
 
       {attachments.length > 0 && (
@@ -124,16 +139,27 @@ export function Composer({
 
       {notice && <p className="text-[13px] text-muted">{notice}</p>}
 
-      <div className="flex w-full items-center justify-between">
-        <AddFilesButton onSelect={acceptFiles} />
-        <button
-          type="button"
-          onClick={post}
-          disabled={!text.trim() && attachments.length === 0}
-          className="flex cursor-pointer items-center gap-1.5 rounded-full border border-primary bg-primary px-3 py-1 text-[14px] font-semibold text-white transition-opacity duration-200 hover:opacity-90 disabled:opacity-30"
-        >
-          Post
-        </button>
+      <div className="flex w-full items-center">
+        {!editing && <AddFilesButton onSelect={acceptFiles} />}
+        <div className="ml-auto flex items-center gap-2">
+          {onCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="flex cursor-pointer items-center rounded-full border border-border px-3 py-1 text-[14px] font-semibold text-muted transition-colors duration-200 hover:bg-hover hover:text-foreground"
+            >
+              Cancel
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={post}
+            disabled={!text.trim() && attachments.length === 0}
+            className="flex cursor-pointer items-center gap-1.5 rounded-full border border-primary bg-primary px-3 py-1 text-[14px] font-semibold text-white transition-opacity duration-200 hover:opacity-90 disabled:opacity-30"
+          >
+            {label}
+          </button>
+        </div>
       </div>
     </div>
   );

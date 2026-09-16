@@ -14,12 +14,14 @@ import {
   listReflections,
   signOut,
   subscribeAuth,
+  updateReflection,
 } from "./lib/atproto";
 
 export default function Home() {
   const auth = useSyncExternalStore(subscribeAuth, getAuthState, getAuthState);
   const [reflections, setReflections] = useState<Reflection[]>([]);
   const [revealedId, setRevealedId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
     void initSession();
@@ -66,6 +68,18 @@ export default function Home() {
     }
   };
 
+  const update = async (id: string, text: string) => {
+    try {
+      await updateReflection(id, text);
+      setReflections((prev) =>
+        prev.map((x) => (x.id === id ? { ...x, text } : x)),
+      );
+      setEditingId(null);
+    } catch {
+      window.alert("Couldn't update this reflection. Try again.");
+    }
+  };
+
   if (auth.status === "loading") {
     return (
       <main className="mx-auto w-full flex max-w-xl flex-1 flex-col gap-6 px-4 py-8" />
@@ -95,16 +109,27 @@ export default function Home() {
       </div>
       <Composer onPost={(text, attachments) => void add(text, attachments)} />
       <ul className="flex flex-col gap-3">
-        {reflections.map((r) => (
-          <ReflectionItem
-            key={r.id}
-            reflection={r}
-            revealed={r.id === revealedId}
-            onReveal={() => setRevealedId(r.id)}
-            onHide={() => setRevealedId(null)}
-            onDelete={remove}
-          />
-        ))}
+        {reflections.map((r) =>
+          r.id === editingId ? (
+            <Composer
+              key={r.id}
+              initialText={r.text}
+              label="Save"
+              onCancel={() => setEditingId(null)}
+              onPost={(text) => void update(r.id, text)}
+            />
+          ) : (
+            <ReflectionItem
+              key={r.id}
+              reflection={r}
+              revealed={r.id === revealedId}
+              onReveal={() => setRevealedId(r.id)}
+              onHide={() => setRevealedId(null)}
+              onEdit={(id) => setEditingId(id)}
+              onDelete={remove}
+            />
+          ),
+        )}
         {reflections.length === 0 && (
           <p className="text-center text-muted">No reflections to show...</p>
         )}

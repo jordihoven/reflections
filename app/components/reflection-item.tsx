@@ -1,6 +1,6 @@
 "use client";
 
-import { FileText, Trash2 } from "lucide-react";
+import { FileText, Pencil, Trash2 } from "lucide-react";
 import type { Reflection } from "./types";
 
 export function ReflectionItem({
@@ -8,12 +8,14 @@ export function ReflectionItem({
   revealed,
   onReveal,
   onHide,
+  onEdit,
   onDelete,
 }: {
   reflection: Reflection;
   revealed: boolean;
   onReveal: () => void;
   onHide: () => void;
+  onEdit: (id: string) => void;
   onDelete: (id: string) => void;
 }) {
   return (
@@ -33,7 +35,7 @@ export function ReflectionItem({
     >
       {reflection.text && (
         <p
-          className={`w-full overflow-wrap-break-word whitespace-pre-wrap text-base leading-[1.7] transition-colors duration-400 ${
+          className={`w-full overflow-wrap-break-word whitespace-pre-wrap text-base leading-[1.7] font-medium transition-colors duration-400 ${
             revealed ? "text-foreground" : "text-muted"
           }`}
         >
@@ -77,6 +79,14 @@ export function ReflectionItem({
             revealed ? "opacity-100" : "opacity-25"
           }`}
         >
+          <button
+            type="button"
+            onClick={() => onEdit(reflection.id)}
+            aria-label="Edit reflection"
+            className="flex cursor-pointer items-center gap-1 rounded-xl px-3 py-2 text-[14px] text-muted transition-all duration-200 hover:bg-hover hover:text-foreground"
+          >
+            <Pencil size={16} />
+          </button>
           <button
             type="button"
             onClick={() => {

@@ -242,6 +242,23 @@ export async function createReflection(
   return { id: data.uri, text, createdAt: record.createdAt, attachments: saved.length ? saved : undefined };
 }
 
+export async function updateReflection(uri: string, text: string) {
+  const a = requireAgent();
+  const rkey = uri.split("/").pop();
+  if (!rkey) return;
+  const { data: record } = await a.com.atproto.repo.getRecord({
+    repo: a.assertDid,
+    collection: COLLECTION,
+    rkey,
+  });
+  await a.com.atproto.repo.putRecord({
+    repo: a.assertDid,
+    collection: COLLECTION,
+    rkey,
+    record: { ...record.value, text },
+  });
+}
+
 export async function deleteReflection(uri: string) {
   const a = requireAgent();
   const rkey = uri.split("/").pop();
