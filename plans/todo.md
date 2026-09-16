@@ -3,7 +3,8 @@
 # Bugs 🐛
 
 - on mobile, the composer posts on enter. enter on mobile should be newline, only the button should post.
-- ...
+- once file upload lands at atproto, refreshes and causes layout shift
+- on load, images stutter in...
 
 # Features 🚀
 

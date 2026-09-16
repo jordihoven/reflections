@@ -188,21 +188,23 @@ export async function listReflections(): Promise<Reflection[]> {
     limit: REFLECTION_LIMIT,
     reverse: true,
   });
-  return data.records.map(({ uri, value }) => {
-    const v = value as {
-      text?: string;
-      createdAt: string;
-      attachments?: StoredAttachment[];
-    };
-    return {
-      id: uri,
-      text: v.text ?? "",
-      createdAt: v.createdAt,
-      attachments: v.attachments
-        ?.map((s) => storedToAttachment(did, s))
-        .filter((a): a is Attachment => a !== undefined),
-    };
-  });
+  return data.records
+    .map(({ uri, value }) => {
+      const v = value as {
+        text?: string;
+        createdAt: string;
+        attachments?: StoredAttachment[];
+      };
+      return {
+        id: uri,
+        text: v.text ?? "",
+        createdAt: v.createdAt,
+        attachments: v.attachments
+          ?.map((s) => storedToAttachment(did, s))
+          .filter((a): a is Attachment => a !== undefined),
+      };
+    })
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 export async function createReflection(
